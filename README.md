@@ -6,9 +6,9 @@
 
 | Field | Value |
 |-------|-------|
-| Name | [Your Name] |
-| Date | [Today's Date] |
-| Email | [Your Email] |
+| Name | Rishabh Pal |
+| Date | 27-02-2026 |
+| Email | rishabh.pal.rcc390@gmail.com|
 
 <br>
 
@@ -16,10 +16,13 @@
 
 <br>
 
-## Project Overview
+## Project Objective
 
-This project demonstrates a cost-efficient backup and data lake solution for a SaaS platform with a PostgreSQL database.
-
+This assessment is designed to evaluate your practical data engineering skills, specifically:
+Cost-aware decision making
+Backup automation
+Data lake design for analytics
+Ability to execute safely on AWS without incurring cost
 <br>
 
 ### What This Project Does
