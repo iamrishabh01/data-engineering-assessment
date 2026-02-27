@@ -94,7 +94,7 @@ Ability to execute safely on AWS without incurring cost
 | `athena_query_results.png` | Query results with data scanned proof |
 | `athena_console.png` | Athena console in AWS |
 | `cleanup_output.png` | Cleanup script deleting everything |
-| `billing_zero.png` | AWS billing page showing $0.00 |
+| `billing.png` | AWS billing page showing $0.00 |
 
 <br>
 
