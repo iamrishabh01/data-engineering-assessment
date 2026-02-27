@@ -1,128 +1,683 @@
-# Data Engineering Assessment
+# Data Engineering Assessment — Backup & Data Lake Solution
 
-This repository contains a collection of Python scripts and utilities used in a
-simple data engineering assessment. The goal is to demonstrate a minimal data
-pipeline that covers:
+<br>
 
-- PostgreSQL database setup and sample data ingestion
-- Generating synthetic data files and uploading to an S3 data lake
-- Configuring Amazon Athena tables over the data lake
-- Running sample queries against Athena
-- Backing up the PostgreSQL database to S3 with retention policy
-- Cleaning up AWS resources when finished
+## Author
 
-All configuration values (database credentials, bucket name, AWS region, etc.)
-are stored in `config.py` so you can adjust them for your own environment.
+| Field | Value |
+|-------|-------|
+| Name | [Your Name] |
+| Date | [Today's Date] |
+| Email | [Your Email] |
+
+<br>
 
 ---
+
+<br>
+
+## Project Overview
+
+This project demonstrates a cost-efficient backup and data lake solution for a SaaS platform with a PostgreSQL database.
+
+<br>
+
+### What This Project Does
+
+<br>
+
+**Part 1 — Cost Analysis**
+- Compared 3 different backup strategies
+- Recommended the best approach for production
+- Analyzed cost, restore speed, and operational complexity
+
+<br>
+
+**Part 2 — Backup Automation**
+- Takes PostgreSQL backup using pg_dump
+- Compresses the backup with gzip
+- Uploads to S3 organized by date
+- Deletes old backups automatically (retention policy)
+
+<br>
+
+**Part 3 — Data Lake**
+- Generates sample data in Parquet format
+- Uploads to S3 with date-based partitions
+- Creates Athena tables with partition columns
+- Runs SQL queries scanning only KBs of data
+
+<br>
+
+**Cleanup**
+- Deletes ALL AWS resources after execution
+- Total AWS cost: $0.00
+
+<br>
+
+---
+
+<br>
+
+## Project Structure
+
+<br>
+
+| File | Purpose |
+|------|---------|
+| `README.md` | This documentation file |
+| `COST_ANALYSIS.md` | Part 1: Cost analysis document |
+| `config.py` | Shared settings (bucket name, DB credentials) |
+| `create_bucket.py` | Creates S3 bucket |
+| `setup_database.py` | Creates sample PostgreSQL database |
+| `setup_athena_config.py` | Configures Athena query result location |
+| `backup_to_s3.py` | Part 2: Backup automation script |
+| `generate_data.py` | Part 3: Generates sample Parquet files |
+| `upload_datalake.py` | Part 3: Uploads data to S3 |
+| `setup_athena.py` | Part 3: Creates Athena database and tables |
+| `query_athena.py` | Part 3: Runs Athena queries with partition filters |
+| `cleanup.py` | Deletes ALL AWS resources |
+
+<br>
+
+### Screenshots Folder
+
+<br>
+
+| Screenshot | What It Shows |
+|------------|---------------|
+| `backup_execution.png` | Backup script running successfully |
+| `s3_datalake_upload.png` | S3 file structure after upload |
+| `athena_query_results.png` | Query results with data scanned proof |
+| `athena_console.png` | Athena console in AWS |
+| `cleanup_output.png` | Cleanup script deleting everything |
+| `billing_zero.png` | AWS billing page showing $0.00 |
+
+<br>
+
+---
+
+<br>
 
 ## Prerequisites
 
-Before running the scripts you'll need:
+<br>
 
-1. **Python 3.10+** installed on your machine.
-2. [pip](https://pip.pypa.io/en/stable/) for installing dependencies.
-3. AWS credentials configured (e.g. via `aws configure` or environment
-   variables) with permissions for S3, Athena, and STS.
-4. PostgreSQL server running locally (default host `localhost:5432`).
-   The `pg_dump` command‑line utility must be available on your `PATH`.
-5. The following Python packages installed:
-   ```bash
-   pip install boto3 pandas pyarrow psycopg2-binary
-   ```
-   (You can also install them via a virtual environment.)
+### Software Required
 
----
+<br>
 
-## Configuration
+| Software | Version | Purpose |
+|----------|---------|---------|
+| Python | 3.8 or higher | All scripts are written in Python |
+| PostgreSQL | 14 or higher | Local database for backup demo |
+| AWS CLI | 2.x | AWS credential configuration |
 
-Edit `config.py` to match your environment. Key settings include:
+<br>
 
-- `BUCKET_NAME` – S3 bucket used for backups and data lake.
-- `REGION` – AWS region for S3/Athena.
-- PostgreSQL connection info (`DB_HOST`, `DB_PORT`, `DB_USER`, etc.).
-- Prefixes for S3 paths (`BACKUP_PREFIX`, `DATALAKE_PREFIX`).
-- Athena database name and retention days for backups.
+### Python Libraries Required
 
----
+<br>
 
-## Scripts and Usage
+| Library | Purpose |
+|---------|---------|
+| `boto3` | Communicate with AWS services (S3, Athena) |
+| `pandas` | Create and manipulate data tables |
+| `pyarrow` | Read and write Parquet files |
+| `psycopg2-binary` | Connect Python to PostgreSQL |
 
-Each Python file is a self‑contained utility. Run them directly from the
-command line (e.g. `python setup_database.py`).
+<br>
 
-### `setup_database.py`
-Create the PostgreSQL database, define the `users`, `orders`, and `events`
-schemas, and insert some sample rows.
+**Install all libraries with one command:**
 
-### `connection.py`
-Quick sanity check to verify a PostgreSQL connection can be established.
+```bash
+pip3 install boto3 pandas pyarrow psycopg2-binary
+```
 
-### `create_bucket.py`
-Create the S3 bucket specified in `config.py`. Handles existing buckets and
-reports errors if the name is already taken by another account.
+<br>
 
-### `generate_data.py`
-Generate synthetic `orders` and `events` data for a few hard‑coded dates and
-write them as partitioned Parquet files under `output/`.  This simulates a data
-lake ingestion pipeline.
+### AWS Permissions Required
 
-### `upload_datalake.py`
-Recursively upload the contents of the `output/` directory to the S3 data lake
-prefix.  Also lists the files in the bucket after upload for verification.
+<br>
 
-### `setup_athena.py`
-Using the `boto3` Athena client, create an Athena database and two external
-tables (`orders` and `events`) that point to the Parquet files in S3.  The
-tables are partitioned by year/month/day and the script repairs partitions
-after creation.
+| IAM Policy | Why |
+|------------|-----|
+| `AmazonS3FullAccess` | Create bucket, upload files, delete files |
+| `AmazonAthenaFullAccess` | Create tables, run queries |
 
-### `query_athena.py`
-Run a handful of example queries against the Athena tables to demonstrate
-partition filters, aggregations, and scans.  Results and stats are printed to
-stdout.
-
-### `backup_to_s3.py`
-Perform a full PostgreSQL dump using `pg_dump`, compress it with `gzip`, and
-upload it to the S3 backup prefix.  The script includes prerequisite checks,
-upload verification, and an S3 object tagging based retention policy that
-later can be used by lifecycle rules to expire old backups.
-
-### `cleanup.py`
-Remove all AWS resources created by the assessment: drop Athena tables and
-database, delete all objects from the bucket (and the bucket itself), and
-delete any locally generated directories like `output/` and temporary backup
-files.  Use with caution; the script prompts for confirmation.
+<br>
 
 ---
 
-## Typical Workflow
+<br>
 
-1. Edit `config.py` with your settings.
-2. Ensure PostgreSQL is running and `pg_dump` is on the path.
-3. Install dependencies (see above).
-4. Run `python setup_database.py` to prepare the sample database.
-5. (Optional) Use `python connection.py` to test the DB connection.
-6. Run `python create_bucket.py` to make the S3 bucket.
-7. Generate sample data: `python generate_data.py`.
-8. Upload the data lake: `python upload_datalake.py`.
-9. Configure Athena: `python setup_athena.py`.
-10. Query the data: `python query_athena.py`.
-11. Take a backup: `python backup_to_s3.py`.
-12. When finished, you can clean up everything with
-    `python cleanup.py`.
+## How To Run — Step by Step
+
+<br>
+
+### Step 0: Configure Settings
+
+<br>
+
+Open `config.py` and change these two values:
+
+```python
+BUCKET_NAME = "de-assessment-yourname-2025"   # Your unique bucket name
+DB_PASSWORD = "postgres"                       # Your PostgreSQL password
+```
+
+<br>
+
+### Step 1: Verify Everything Is Installed
+
+<br>
+
+```bash
+python3 --version
+```
+
+```bash
+python3 -c "import boto3, pandas, pyarrow, psycopg2; print('All libraries OK')"
+```
+
+```bash
+aws sts get-caller-identity
+```
+
+```bash
+psql --version
+```
+
+<br>
+
+### Step 2: Create S3 Bucket
+
+<br>
+
+```bash
+python3 create_bucket.py
+```
+
+<br>
+
+Expected output:
+
+```
+Creating S3 bucket: de-assessment-yourname-2025
+  ✓ Bucket created successfully!
+  ✓ Verified: bucket exists in your account
+```
+
+<br>
+
+### Step 3: Create Sample Database
+
+<br>
+
+```bash
+python3 setup_database.py
+```
+
+<br>
+
+Expected output:
+
+```
+  ✓ Database 'saas_platform' created
+  ✓ Users table created
+  ✓ Orders table created
+  ✓ Events table created
+  📊 users: 5 rows
+  📊 orders: 5 rows
+  📊 events: 5 rows
+```
+
+<br>
+
+### Step 4: Run Backup (Part 2)
+
+<br>
+
+```bash
+python3 backup_to_s3.py
+```
+
+<br>
+
+What this script does:
+
+1. Runs `pg_dump` to export the entire database as SQL
+2. Compresses the SQL file using gzip (reduces size by ~80%)
+3. Uploads the compressed file to S3
+4. Organizes by date: `s3://bucket/backups/postgres/2025/06/10/backup.sql.gz`
+5. Checks for backups older than 30 days and deletes them
+6. Removes the local temporary file
+
+<br>
+
+### Step 5: Generate Data Lake Files (Part 3)
+
+<br>
+
+```bash
+python3 generate_data.py
+```
+
+<br>
+
+What this script does:
+
+- Creates Parquet files for `orders` and `events` tables
+- Generates data for 6 different dates
+- Saves files in Hive-style partition folders
+
+<br>
+
+Output folder structure:
+
+```
+output/
+├── orders/
+│   └── year=2025/
+│       ├── month=01/
+│       │   ├── day=10/data.parquet
+│       │   ├── day=11/data.parquet
+│       │   └── day=12/data.parquet
+│       ├── month=02/
+│       │   ├── day=01/data.parquet
+│       │   └── day=02/data.parquet
+│       └── month=03/
+│           └── day=01/data.parquet
+└── events/
+    └── (same structure as orders)
+```
+
+<br>
+
+### Step 6: Upload Data to S3
+
+<br>
+
+```bash
+python3 upload_datalake.py
+```
+
+<br>
+
+### Step 7: Configure Athena
+
+<br>
+
+```bash
+python3 setup_athena_config.py
+```
+
+<br>
+
+This sets the query result location to `s3://bucket/athena-results/` and runs a test query to verify Athena works.
+
+<br>
+
+### Step 8: Create Athena Tables
+
+<br>
+
+```bash
+python3 setup_athena.py
+```
+
+<br>
+
+What this script does:
+
+1. Creates database `saas_datalake`
+2. Creates `orders` table with partition columns (year, month, day)
+3. Creates `events` table with partition columns (year, month, day)
+4. Runs `MSCK REPAIR TABLE` to discover all partitions in S3
+
+<br>
+
+### Step 9: Run Athena Queries
+
+<br>
+
+```bash
+python3 query_athena.py
+```
+
+<br>
+
+What this script does:
+
+- Runs 5 SQL queries
+- Every query includes partition filters in the WHERE clause
+- Shows data scanned for each query (must be KBs only)
+- Displays formatted results
+
+<br>
+
+### Step 10: Cleanup (MANDATORY)
+
+<br>
+
+```bash
+python3 cleanup.py
+```
+
+<br>
+
+What this script does:
+
+1. Drops Athena tables (orders, events)
+2. Drops Athena database (saas_datalake)
+3. Deletes ALL objects in the S3 bucket
+4. Deletes the S3 bucket itself
+5. Removes local generated files
+
+<br>
 
 ---
 
-## Notes & Tips
+<br>
 
-- All scripts are idempotent where possible; you can safely re‑run them.
-- Adjust the list of dates and users in `generate_data.py` to simulate other
-datasets.
-- The backup script tags S3 objects so you can configure lifecycle policies in
-  the AWS console to automatically expire old backups.
-- If you need to change Python dependencies, consider adding a
-  `requirements.txt` file and updating documentation accordingly.
+## Part 2 — Backup Details
 
-Happy data engineering! 🎯
+<br>
+
+### Backup Flow
+
+<br>
+
+| Step | Action | Tool Used |
+|------|--------|-----------|
+| 1 | Export database to SQL file | `pg_dump` |
+| 2 | Compress SQL file | `gzip` (Python) |
+| 3 | Upload to S3 | `boto3` |
+| 4 | Delete old backups | `boto3` |
+| 5 | Remove local temp file | `os.remove` |
+
+<br>
+
+### S3 Backup Path Structure
+
+<br>
+
+```
+s3://bucket/backups/postgres/
+└── 2025/
+    └── 06/
+        └── 10/
+            └── backup_20250610_143022.sql.gz
+```
+
+<br>
+
+### How Retention Works
+
+<br>
+
+**Layer 1 — Script-based retention (active):**
+
+- Every time `backup_to_s3.py` runs, it scans S3 for existing backups
+- Any backup with a `LastModified` date older than 30 days is deleted
+- This runs automatically as part of every backup
+
+<br>
+
+**Layer 2 — S3 Lifecycle Policy (safety net):**
+
+- Can be configured on the S3 bucket as an extra safety measure
+- Automatically moves old backups to cheaper storage
+- Automatically deletes backups after the retention period
+- Works even if the backup script fails to run
+
+<br>
+
+---
+
+<br>
+
+## Part 3 — Data Lake Details
+
+<br>
+
+### Why Parquet Format Instead of CSV?
+
+<br>
+
+| Feature | CSV | Parquet |
+|---------|-----|---------|
+| File type | Text (row-based) | Binary (column-based) |
+| File size | Large | Small (compressed) |
+| What Athena reads | ALL columns always | Only the columns you need |
+| Query cost | Higher | Lower |
+
+<br>
+
+When you run `SELECT amount, status FROM orders`, Athena with Parquet only reads the `amount` and `status` columns. With CSV, it would read every column in the file.
+
+<br>
+
+### Why Partitions?
+
+<br>
+
+**Without partitions:**
+
+- All data in one big file
+- Every query must scan everything
+- More data scanned = more cost
+
+<br>
+
+**With partitions:**
+
+- Data split into folders by date
+- Queries with `WHERE year=2025 AND month=1` only scan matching folders
+- Much less data scanned = much less cost
+
+<br>
+
+### Athena Query Rules (Assessment Requirement)
+
+<br>
+
+**Rule 1:** Every query MUST have partition filters in the WHERE clause.
+
+<br>
+
+**Rule 2:** Data scanned must be in KBs or MBs only, NOT GBs.
+
+<br>
+
+**Correct — has partition filter:**
+
+```sql
+SELECT * FROM orders
+WHERE year = 2025 AND month = 1 AND day = 10;
+```
+
+<br>
+
+**Wrong — no partition filter:**
+
+```sql
+SELECT * FROM orders;
+```
+
+<br>
+
+### Queries Used in This Project
+
+<br>
+
+| Query | Description | Partition Filter | Data Scanned |
+|-------|-------------|-----------------|--------------|
+| 1 | Orders on 2025-01-10 | year=2025, month=1, day=10 | ~2 KB |
+| 2 | Revenue by status, Jan 2025 | year=2025, month=1 | ~6 KB |
+| 3 | Event types on 2025-01-10 | year=2025, month=1, day=10 | ~3 KB |
+| 4 | Top spenders, Jan 2025 | year=2025, month=1 | ~6 KB |
+| 5 | Login counts, Jan 2025 | year=2025, month=1 | ~3 KB |
+
+<br>
+
+---
+
+<br>
+
+## Cost Summary
+
+<br>
+
+### AWS Resources Used
+
+<br>
+
+| Resource | What For | Amount Used | Cost |
+|----------|----------|-------------|------|
+| S3 Storage | Backups and data lake files | Less than 1 MB | $0.00 |
+| S3 PUT Requests | Uploading files | Less than 20 | $0.00 |
+| S3 GET Requests | Athena reading files | Less than 50 | $0.00 |
+| Athena Queries | Running SQL queries | Less than 100 KB scanned | $0.00 |
+| **Total** | | | **$0.00** |
+
+<br>
+
+### Why It Costs Nothing
+
+<br>
+
+- S3 charges $0.023 per GB per month. We used less than 0.001 GB.
+- Athena charges $5 per TB scanned. We scanned less than 0.0001 GB.
+- Both round to $0.00.
+
+<br>
+
+### Prohibited Resources — NOT Used
+
+<br>
+
+| Resource | Status |
+|----------|--------|
+| RDS | ❌ Not used |
+| EC2 | ❌ Not used |
+| DMS | ❌ Not used |
+| Glue Jobs | ❌ Not used |
+| NAT Gateway | ❌ Not used |
+| QuickSight | ❌ Not used |
+| Any managed database | ❌ Not used |
+| Any compute service | ❌ Not used |
+
+<br>
+
+---
+
+<br>
+
+## Cleanup Proof
+
+<br>
+
+### What Was Deleted
+
+<br>
+
+| Resource | Action |
+|----------|--------|
+| Athena table: `orders` | Dropped |
+| Athena table: `events` | Dropped |
+| Athena database: `saas_datalake` | Dropped |
+| All S3 objects | Deleted |
+| S3 bucket | Deleted |
+| Local `output/` folder | Deleted |
+
+<br>
+
+### Verification
+
+<br>
+
+- S3 bucket confirmed deleted (returns 404)
+- Athena database and tables no longer exist
+- Local files removed
+- AWS Billing page shows $0.00
+
+<br>
+
+See screenshot: `screenshots/billing_zero.png`
+
+<br>
+
+---
+
+<br>
+
+## Quick Reference — All Commands in Order
+
+<br>
+
+```bash
+python3 create_bucket.py
+python3 setup_database.py
+python3 backup_to_s3.py
+python3 generate_data.py
+python3 upload_datalake.py
+python3 setup_athena_config.py
+python3 setup_athena.py
+python3 query_athena.py
+python3 cleanup.py
+```
+
+<br>
+
+---
+
+<br>
+
+## Video Recording Guide
+
+<br>
+
+The required 5 to 10 minute video should show the following:
+
+<br>
+
+| Time | What To Show |
+|------|-------------|
+| 0:00 | Brief introduction |
+| 0:30 | Run `create_bucket.py` |
+| 1:00 | Run `setup_database.py` |
+| 1:30 | Run `backup_to_s3.py` |
+| 2:30 | Run `generate_data.py` |
+| 3:00 | Run `upload_datalake.py` |
+| 3:30 | Run `setup_athena_config.py` |
+| 4:00 | Run `setup_athena.py` |
+| 4:30 | Run `query_athena.py` and show data scanned |
+| 6:00 | Open AWS Console and run a query in Athena |
+| 7:00 | Run `cleanup.py` |
+| 8:00 | Open AWS Billing page and show $0.00 |
+| 8:30 | Brief summary of key decisions |
+
+<br>
+
+---
+
+<br>
+
+## Technologies Used
+
+<br>
+
+| Technology | Purpose |
+|-----------|---------|
+| Python 3 | All scripts and automation |
+| PostgreSQL | Sample production database |
+| AWS S3 | Object storage for backups and data lake |
+| AWS Athena | Serverless SQL query engine |
+| Apache Parquet | Columnar file format for analytics |
+| Hive-style Partitioning | Date-based folder organization for efficient queries |
+| boto3 | AWS SDK for Python |
+| pandas | Data generation and manipulation |
+| pg_dump | PostgreSQL backup utility |
+| gzip | File compression |
 testing
