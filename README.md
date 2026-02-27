@@ -637,31 +637,7 @@ python3 cleanup.py
 
 <br>
 
-## Video Recording Guide
 
-<br>
-
-The required 5 to 10 minute video should show the following:
-
-<br>
-
-| Time | What To Show |
-|------|-------------|
-| 0:00 | Brief introduction |
-| 0:30 | Run `create_bucket.py` |
-| 1:00 | Run `setup_database.py` |
-| 1:30 | Run `backup_to_s3.py` |
-| 2:30 | Run `generate_data.py` |
-| 3:00 | Run `upload_datalake.py` |
-| 3:30 | Run `setup_athena_config.py` |
-| 4:00 | Run `setup_athena.py` |
-| 4:30 | Run `query_athena.py` and show data scanned |
-| 6:00 | Open AWS Console and run a query in Athena |
-| 7:00 | Run `cleanup.py` |
-| 8:00 | Open AWS Billing page and show $0.00 |
-| 8:30 | Brief summary of key decisions |
-
-<br>
 
 ---
 
